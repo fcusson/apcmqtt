@@ -10,17 +10,17 @@ functions:
 __version__ = "0.1.1"
 __author__ = "Felix Cusson"
 
+from time import sleep
+
+import yaml
+
 from apcmqtt.apc import Ups
 from apcmqtt.mqtt import Publisher
-import yaml
 from apcmqtt.exceptions import MissingConfigError, ConfigurationError
-import time
-import threading
-
 
 CONFIG_FILE = "config/apcmqtt.yaml"
 
-def setup() -> tuple[dict[str, Ups], Publisher]:
+def setup() -> tuple[dict[str, Ups], Publisher, int]:
     """general setup before starting the main loop of the script"""
 
     # get the config information
@@ -49,14 +49,21 @@ def setup() -> tuple[dict[str, Ups], Publisher]:
     publisher = Publisher(user, password, host, port)
     #publisher.publish_ups_data(ups.name, ups.get_dict())
 
-    return ups_dict, publisher
+    delay = config["script"]["delay"]
 
-def loop(ups_list: dict[str, Ups], publisher: Publisher) -> None:
+    return ups_dict, publisher, delay
+
+def loop(ups_list: dict[str, Ups], publisher: Publisher, delay: int) -> None:
     """main loop of the script that will execute until stopped"""
     while True:
-        for name, ups in ups_list.items():
-            publisher.publish_ups_data(name, ups.get_dict())
-        time.sleep(10)
+        request_publishing(ups_list, publisher)
+        sleep(delay)
+
+
+def request_publishing(ups_list: dict[str, Ups], publisher: Publisher) -> None:
+    """request publishing of the ups information to the publisher"""
+    for name, ups in ups_list.items():
+        publisher.publish_ups_data(name, ups.get_dict())
 
 def gracefull_exit() -> None:
     """manages exiting the script"""
@@ -103,10 +110,10 @@ def get_host_config(ups: dict) -> tuple[str]:
 
 
 if __name__ == "__main__":
-    UPS_DICT, PUBLISHER = setup()
+    UPS_DICT, PUBLISHER, DELAY = setup()
 
     try:
-        loop(UPS_DICT, PUBLISHER)
+        loop(UPS_DICT, PUBLISHER, DELAY)
     except KeyboardInterrupt:
         print("closing...")
         exit(0)
