@@ -1,0 +1,13 @@
+mqtt:
+  host: 127.0.0.1
+  port: 1883
+  user: username
+  password: password
+  root_channel: ups
+ups:
+  local:
+    is_local: true
+  server:
+    is_local: false
+    host: 192.168.0.50
+    port: 3551

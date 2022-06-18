@@ -7,11 +7,21 @@ functions:
     main(): code entrypoint
 """
 
-import apc.ups as ups
+from apcmqtt.apc import Ups
+from apcmqtt.mqtt import Publisher
 
 def main():
     """code entrypoint"""
-    ups.get_ups_status()
+
+    # create the ups instance
+    ups = Ups()
+
+    # create the mqtt_publisher instance
+    publisher = Publisher("kuma", "Folder#502")
+    publisher.connect("192.168.0.50")
+
+    ups.update()
+    publisher.publish_ups_data(ups.name, ups.dict())
 
 if __name__ == "__main__":
     main()
