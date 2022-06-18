@@ -15,7 +15,7 @@ _REMOVE_LIST = [
 from ast import Raise
 import subprocess
 from datetime import datetime
-from apcmqtt.exceptions import DependencyError
+from apcmqtt.exceptions import DependencyError, ApcAccessConnectionError
 
 class Ups:
     """An instance of a APCUPSD compatible UPS"""
@@ -25,8 +25,14 @@ class Ups:
     time_left: float
     battery_charge: float
     datapack: dict[str, str]
+    is_local: bool
+    host: str
+    port: int
 
-    def __init__(self, ) -> None:
+    def __init__(self, is_local:bool = True, host: str = None, port: int = None) -> None:
+        self.is_local = is_local
+        self.host = host
+        self.port = port
         self.update()
 
     def __str__(self) -> str:
@@ -44,7 +50,7 @@ class Ups:
 
     def update(self) -> None:
         """fetches the status of the ups to update the instance"""
-        self.datapack = get_ups_status()
+        self.datapack = self.get_ups_status()
 
         self.name = self.datapack.pop("upsname")
         self.status = self.datapack.pop("status")
@@ -52,7 +58,7 @@ class Ups:
         self.battery_charge = self.datapack.pop("bcharge")
 
 
-    def dict(self) -> dict[str, str]:
+    def get_dict(self) -> dict[str, str]:
         result = {
             "name": self.name,
             "status": self.status,
@@ -66,39 +72,47 @@ class Ups:
 
         return result
 
-def get_ups_status() -> dict[str, str]:
-    """retreives the ups status from the computer and returns a
-    dictionary of the attributes
+    def get_ups_status(self) -> dict[str, str]:
+        """retreives the ups status from the computer and returns a
+        dictionary of the attributes
 
-    Returns:
-        dict(str,str): a dictionnary containing the data descriptor as
-        key and its value as value
-    """
-    result = {}
+        Returns:
+            dict(str,str): a dictionnary containing the data descriptor as
+            key and its value as value
+        """
+        result = {}
 
-    try:
-        status = subprocess.check_output(
-            "/usr/sbin/apcaccess"
-        ).decode("ascii")
-    except FileNotFoundError:
-        raise DependencyError(
-            "apcupsd not found. Install Dependencies or change to correct" + \
-            "location in config"
-        )
+        try:
 
-    for line in status.split('\n'):
+            query = "/usr/sbin/apcaccess" if self.is_local else \
+                ["/usr/sbin/apcaccess", "-h", f"{self.host}:{self.port}"]
 
-        if line == "": continue
+            status = subprocess.check_output(query).decode("ascii")
 
-        key, value = line.split(": ")
+        except FileNotFoundError:
+            raise DependencyError(
+                "apcupsd not found. Install Dependencies or change to correct" + \
+                "location in config"
+            )
+        except subprocess.CalledProcessError:
+            raise ApcAccessConnectionError(
+                "Unable to connect to remote apcupsd agent"
+            )
 
-        # clean up values
-        key = key.strip().lower()
-        value = _clean_value(value)
 
-        result[key] = value
+        for line in status.split('\n'):
 
-    return result
+            if line == "": continue
+
+            key, value = line.split(": ")
+
+            # clean up values
+            key = key.strip().lower()
+            value = _clean_value(value)
+
+            result[key] = value
+
+        return result
 
 def _clean_value(value: str) -> str:
 
