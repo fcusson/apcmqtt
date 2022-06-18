@@ -3,3 +3,9 @@ class DependencyError(Exception):
 
 class ApcAccessConnectionError(Exception):
     pass
+
+class ConfigurationError(Exception):
+    pass
+
+class MissingConfigError(Exception):
+    pass
