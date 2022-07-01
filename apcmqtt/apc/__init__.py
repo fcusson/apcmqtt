@@ -3,6 +3,10 @@
 Classes:
     Ups
 """
+from datetime import datetime
+import subprocess
+
+from apcmqtt.exceptions import DependencyError, ApcAccessConnectionError
 
 _REMOVE_LIST = [
     " Volts",
@@ -12,10 +16,6 @@ _REMOVE_LIST = [
     " Watts"
 ]
 
-from ast import Raise
-import subprocess
-from datetime import datetime
-from apcmqtt.exceptions import DependencyError, ApcAccessConnectionError
 
 class Ups:
     """An instance of a APCUPSD compatible UPS"""
@@ -29,7 +29,7 @@ class Ups:
     host: str
     port: int
 
-    def __init__(self, is_local:bool = True, host: str = None, port: int = None) -> None:
+    def __init__(self, is_local: bool = True, host: str = None, port: int = None) -> None:
         self.is_local = is_local
         self.host = host
         self.port = port
@@ -47,7 +47,6 @@ class Ups:
 
         return result
 
-
     def update(self) -> None:
         """fetches the status of the ups to update the instance"""
         self.datapack = self.get_ups_status()
@@ -56,7 +55,6 @@ class Ups:
         self.status = self.datapack.pop("status")
         self.time_left = self.datapack.pop("timeleft")
         self.battery_charge = self.datapack.pop("bcharge")
-
 
     def get_dict(self) -> dict[str, str]:
         result = {
@@ -91,7 +89,7 @@ class Ups:
 
         except FileNotFoundError:
             raise DependencyError(
-                "apcupsd not found. Install Dependencies or change to correct" + \
+                "apcupsd not found. Install Dependencies or change to correct" +
                 "location in config"
             )
         except subprocess.CalledProcessError:
@@ -99,10 +97,10 @@ class Ups:
                 "Unable to connect to remote apcupsd agent"
             )
 
-
         for line in status.split('\n'):
 
-            if line == "": continue
+            if line == "":
+                continue
 
             key, value = line.split(": ")
 
@@ -113,6 +111,7 @@ class Ups:
             result[key] = value
 
         return result
+
 
 def _clean_value(value: str) -> str:
 
@@ -127,6 +126,7 @@ def _clean_value(value: str) -> str:
 
     return value.strip()
 
+
 def _is_date(string: str) -> bool:
 
     string = string.split(' ')[:2]
@@ -137,4 +137,3 @@ def _is_date(string: str) -> bool:
         return True
     except ValueError:
         return False
-
