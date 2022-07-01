@@ -7,7 +7,7 @@ functions:
     main(): code entrypoint
 """
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 __author__ = "Felix Cusson"
 
 from email import parser
