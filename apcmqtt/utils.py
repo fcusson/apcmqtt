@@ -23,8 +23,31 @@ def log_message(
         level (int, optional): the int value of the log message.
             Defaults to logging.INFO.
     """
-    msg = f"[{logger.name}] {datetime.now()} - {msg}"
+    msg = f"{datetime.now()} - {msg}"
+
     logger.log(level, msg)
 
     if level >= logging.ERROR:
         sys.exit(1)
+
+
+def is_date(potential_date: str) -> bool:
+    """validate if the potential_date is a string representation of a
+    date
+
+    Args:
+        potential_date (str): a string that is potentially a
+        representation of a date
+
+    Returns:
+        bool: True if potential_date represent a date
+    """
+
+    potential_date = potential_date.split(' ')[:2]
+    potential_date = ' '.join(potential_date)
+
+    try:
+        datetime.strptime(potential_date, "%Y-%m-%d %H:%M:%S")
+        return True
+    except ValueError:
+        return False

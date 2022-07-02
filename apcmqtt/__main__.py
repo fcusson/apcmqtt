@@ -10,7 +10,6 @@ functions:
 __version__ = "0.1.2"
 __author__ = "Felix Cusson"
 
-from email import parser
 from time import sleep
 import argparse
 import logging
@@ -19,10 +18,15 @@ import yaml
 
 from apcmqtt.apc import Ups
 from apcmqtt.mqtt import Publisher
-from apcmqtt.exceptions import MissingConfigError, ConfigurationError
+from apcmqtt.exceptions import (
+    MissingConfigError,
+    ConfigurationError,
+    ApcAccessConnectionError,
+    MqttConnectionError,
+)
 import apcmqtt.utils as utils
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger("apcmqtt")
 
 
 def setup(config_file: str) -> tuple[dict[str, Ups], Publisher, int]:
@@ -35,24 +39,39 @@ def setup(config_file: str) -> tuple[dict[str, Ups], Publisher, int]:
     except FileNotFoundError as exc:
         raise MissingConfigError("Config file not found") from exc
 
-    ups_dict = find_ups(config["ups"])
     # get the config for the mqtt broker
     try:
+        ups_dict = find_ups(config["ups"])
         user = config["mqtt"]["user"]
         password = config["mqtt"]["password"]
         host = config["mqtt"]["host"]
         port = config["mqtt"]["port"]
+        root_topic = config["mqtt"]["root_topic"]
     except KeyError as exc:
         raise ConfigurationError(
             "Missing configuration element",
             str(exc),
         ) from exc
 
-    # create the mqtt_publisher instance
-    publisher = Publisher(user, password, host, port)
-    #publisher.publish_ups_data(ups.name, ups.get_dict())
+    utils.log_message(
+        LOGGER,
+        "Config file loaded",
+        logging.INFO,
+    )
 
-    delay = config["script"]["delay"]
+    # create the mqtt_publisher instance
+    publisher = Publisher(user, password, host, port, root_topic)
+
+    utils.log_message(
+        LOGGER,
+        "connexion to mqtt broker established",
+        logging.INFO,
+    )
+
+    try:
+        delay = config["script"]["delay"]
+    except KeyError as exc:
+        raise MissingConfigError from exc
 
     return ups_dict, publisher, delay
 
@@ -79,12 +98,32 @@ def request_publishing(ups_list: dict[str, Ups], publisher: Publisher) -> None:
         publisher (Publisher): the mqtt publisher
     """
     for name, ups in ups_list.items():
-        publisher.publish_ups_data(name, ups.get_dict())
+        utils.log_message(
+            LOGGER,
+            f"Publishing data for {name} @{publisher.host}:{publisher.port}",
+            logging.INFO,
+        )
+
+        try:
+            publisher.publish_ups_data(name, ups.get_dict())
+        except (
+            ApcAccessConnectionError,
+            MqttConnectionError
+        ):
+            utils.log_message(
+                LOGGER,
+                "Unable to connect to mqtt broker",
+                logging.WARNING,
+            )
 
 
 def gracefull_exit() -> None:
     """gracefully close the module"""
-    print("Closing...")
+    utils.log_message(
+        LOGGER,
+        "Closing apcmqtt",
+        logging.INFO,
+    )
     exit(0)
 
 
@@ -100,7 +139,7 @@ def find_ups(ups_list: dict) -> dict[str, Ups]:
     """
     ups_dict = {}
 
-    for ups_config in ups_list.values():
+    for name, ups_config in ups_list.items():
         # get the config for the ups
         is_local = ups_config["is_local"]
         host = None
@@ -111,9 +150,12 @@ def find_ups(ups_list: dict) -> dict[str, Ups]:
         if not is_local:
             host, port = get_host_config(ups_config)
 
-        ups = Ups(is_local, host, port)
+        ups = Ups(name, is_local, host, port)
 
-        ups_dict[ups.name] = ups
+        try:
+            ups_dict[ups.name] = ups
+        except KeyError as exc:
+            raise exc
 
     return ups_dict
 
@@ -167,7 +209,9 @@ if __name__ == "__main__":
     args = vars(parser.parse_args())
 
     if args["debug"]:
-        LOGGER.setLevel(logging.DEBUG)
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)
 
     try:
         UPS_DICT, PUBLISHER, DELAY = setup(args["config"])
@@ -175,7 +219,16 @@ if __name__ == "__main__":
         utils.log_message(
             LOGGER,
             "Configuration file could not be found",
-            logging.ERROR)
+            logging.ERROR
+        )
+    except ConfigurationError as configExc:
+        utils.log_message(
+            LOGGER,
+            f"Missing Configuration Key - {str(configExc)}",
+            logging.ERROR
+        )
+
+    utils.log_message(LOGGER, "debug message test", logging.DEBUG)
 
     try:
         loop(UPS_DICT, PUBLISHER, DELAY)
