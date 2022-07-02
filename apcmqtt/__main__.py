@@ -105,6 +105,7 @@ def request_publishing(ups_list: dict[str, Ups], publisher: Publisher) -> None:
         )
 
         try:
+            ups.update()
             publisher.publish_ups_data(name, ups.get_dict())
         except (
             ApcAccessConnectionError,

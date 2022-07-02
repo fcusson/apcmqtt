@@ -3,7 +3,7 @@ mqtt:
   port: 1883
   user: username
   password: password
-  root_channel: ups
+  root_topic: ups
 ups:
   local:
     is_local: true
@@ -11,3 +11,5 @@ ups:
     is_local: false
     host: 192.168.0.50
     port: 3551
+script:
+  delay: 10
