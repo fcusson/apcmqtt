@@ -34,6 +34,11 @@ def setup(config_file: str) -> tuple[dict[str, Ups], Publisher, int]:
 
     # get the config information
     try:
+        utils.log_message(
+            LOGGER,
+            f"Reading config file located at {config_file}",
+            logging.DEBUG
+        )
         with open(config_file, mode='r', encoding="utf-8") as file:
             config = yaml.safe_load(file)
     except FileNotFoundError as exc:
@@ -41,12 +46,18 @@ def setup(config_file: str) -> tuple[dict[str, Ups], Publisher, int]:
 
     # get the config for the mqtt broker
     try:
+        utils.log_message(
+            LOGGER,
+            "populating variables from config dictionnary",
+            logging.DEBUG
+        )
         ups_dict = find_ups(config["ups"])
         user = config["mqtt"]["user"]
         password = config["mqtt"]["password"]
         host = config["mqtt"]["host"]
         port = config["mqtt"]["port"]
         root_topic = config["mqtt"]["root_topic"]
+        delay = config["script"]["delay"]
     except KeyError as exc:
         raise ConfigurationError(
             "Missing configuration element",
@@ -60,6 +71,11 @@ def setup(config_file: str) -> tuple[dict[str, Ups], Publisher, int]:
     )
 
     # create the mqtt_publisher instance
+    utils.log_message(
+        LOGGER,
+        f"opening connexion with mqtt broker at {host}:{port} with user {user}",
+        logging.DEBUG,
+    )
     publisher = Publisher(user, password, host, port, root_topic)
 
     utils.log_message(
@@ -67,11 +83,6 @@ def setup(config_file: str) -> tuple[dict[str, Ups], Publisher, int]:
         "connexion to mqtt broker established",
         logging.INFO,
     )
-
-    try:
-        delay = config["script"]["delay"]
-    except KeyError as exc:
-        raise MissingConfigError from exc
 
     return ups_dict, publisher, delay
 
@@ -86,7 +97,17 @@ def loop(ups_list: dict[str, Ups], publisher: Publisher, delay: int) -> None:
         delay (int): the delay in seconds between publishing
     """
     while True:
+        utils.log_message(
+            LOGGER,
+            f"publishing information for {ups_list} on {publisher}",
+            logging.DEBUG,
+        )
         request_publishing(ups_list, publisher)
+        utils.log_message(
+            LOGGER,
+            f"waiting delay of {delay}",
+            logging.DEBUG,
+        )
         sleep(delay)
 
 
@@ -105,7 +126,16 @@ def request_publishing(ups_list: dict[str, Ups], publisher: Publisher) -> None:
         )
 
         try:
+            utils.log_message(
+                LOGGER,
+                f"updating {name}'s information",
+                logging.DEBUG,
+            )
             ups.update()
+            utils.log_message(
+                LOGGER,
+                f"publishing {name}'s information on {publisher}"
+            )
             publisher.publish_ups_data(name, ups.get_dict())
         except (
             ApcAccessConnectionError,
@@ -140,20 +170,26 @@ def find_ups(ups_list: dict) -> dict[str, Ups]:
     """
     ups_dict = {}
 
+    utils.log_message(
+        LOGGER,
+        "finding list of ups in config file",
+        logging.DEBUG,
+    )
     for name, ups_config in ups_list.items():
-        # get the config for the ups
-        is_local = ups_config["is_local"]
-        host = None
-        port = None
-
-        # if the ups is not local, make sure the host and port are
-        # provided
-        if not is_local:
-            host, port = get_host_config(ups_config)
-
-        ups = Ups(name, is_local, host, port)
-
         try:
+
+            # get the config for the ups
+            is_local = ups_config["is_local"]
+            host = None
+            port = None
+
+            # if the ups is not local, make sure the host and port are
+            # provided
+            if not is_local:
+                host, port = get_host_config(ups_config)
+
+            ups = Ups(name, is_local, host, port)
+
             ups_dict[ups.name] = ups
         except KeyError as exc:
             raise exc
