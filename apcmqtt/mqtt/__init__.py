@@ -43,6 +43,9 @@ class Publisher:
         self.port = port
         self.root_topic = root_topic
 
+    def __str__(self) -> str:
+        return f"{self.host}:{self.port} -> {self.root_topic}"
+
     def _publish(self, topic: str, payload: str) -> None:
         try:
             publish.single(
