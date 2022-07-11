@@ -10,7 +10,7 @@ import paho.mqtt.publish as publish
 from apcmqtt.exceptions import MqttConnectionError, ApcAccessConnectionError
 import apcmqtt.utils as utils
 
-LOGGER = logging.getLogger("mqtt")
+LOGGER = logging.getLogger(__name__)
 
 
 class Publisher:

@@ -1,0 +1,11 @@
+[Unit]
+Description=apc mqtt publisher daemon
+After=network.target
+
+[Service]
+WorkingDir=/var/apcmqtt/
+ExecStart=/usr/bin/apcmqtt
+ExecStop=
+
+[Install]
+WantedBy=multi-user.target

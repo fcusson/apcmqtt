@@ -18,7 +18,7 @@ _REMOVE_LIST = [
     " Watts"
 ]
 
-LOGGER = logging.getLogger("mqtt")
+LOGGER = logging.getLogger(__name__)
 
 
 class Ups:
@@ -68,6 +68,13 @@ class Ups:
             port (int, optional): port to communicate on to the apcupsd
                 instance. Defaults to None.
         """
+
+        utils.log_message(
+            LOGGER,
+            f"initiating, apc instance for {name}",
+            logging.DEBUG,
+        )
+
         self.is_local = is_local
         self.host = host
         self.port = port

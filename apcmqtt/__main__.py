@@ -26,7 +26,7 @@ from apcmqtt.exceptions import (
 )
 import apcmqtt.utils as utils
 
-LOGGER = logging.getLogger("apcmqtt")
+LOGGER = logging.getLogger(__name__)
 
 
 def setup(config_file: str) -> tuple[dict[str, Ups], Publisher, int]:
@@ -251,6 +251,11 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.INFO)
 
     try:
+        utils.log_message(
+            LOGGER,
+            "starting setup",
+            logging.DEBUG,
+        )
         UPS_DICT, PUBLISHER, DELAY = setup(args["config"])
     except MissingConfigError:
         utils.log_message(
@@ -268,6 +273,16 @@ if __name__ == "__main__":
     utils.log_message(LOGGER, "debug message test", logging.DEBUG)
 
     try:
+        utils.log_message(
+            LOGGER,
+            "Starting main loop",
+            logging.DEBUG
+        )
         loop(UPS_DICT, PUBLISHER, DELAY)
     except KeyboardInterrupt:
+        utils.log_message(
+            LOGGER,
+            "Received keyboard interupt",
+            logging.DEBUG,
+        )
         gracefull_exit()

@@ -8,6 +8,8 @@ import sys
 from logging import Logger
 from datetime import datetime
 
+LOGGER = logging.getLogger(__name__)
+
 
 def log_message(
     logger: Logger,
@@ -47,6 +49,11 @@ def is_date(potential_date: str) -> bool:
     potential_date = ' '.join(potential_date)
 
     try:
+        log_message(
+            LOGGER,
+            f"checking if {potential_date} is a date",
+            logging.DEBUG
+        )
         datetime.strptime(potential_date, "%Y-%m-%d %H:%M:%S")
         return True
     except ValueError:
