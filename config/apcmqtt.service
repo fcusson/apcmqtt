@@ -3,8 +3,8 @@ Description=apc mqtt publisher daemon
 After=network.target
 
 [Service]
-WorkingDir=/var/apcmqtt/
-ExecStart=/usr/bin/apcmqtt
+WorkingDirectory=/lib/apcmqtt/
+ExecStart=python -m apcmqtt
 ExecStop=
 
 [Install]
