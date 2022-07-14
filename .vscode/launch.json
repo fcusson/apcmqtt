@@ -10,7 +10,8 @@
             "request": "launch",
             "module": "apcmqtt",
             "justMyCode": true,
-            "env": {"PYTHONPATH": "${workspaceFolder}/"}
+            "env": {"PYTHONPATH": "${workspaceFolder}/"},
+            "args": ["-c", "config/apcmqtt.yaml"]
         }
     ]
 }

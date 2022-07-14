@@ -1,3 +1,4 @@
+#!/usr/bin/python
 """apcmqtt - apcupsd to mqtt translation layer
 
 This modules monitors apcupsd continuously and updates an MQTT on the
@@ -240,7 +241,7 @@ if __name__ == "__main__":
         "-c",
         "--config",
         help="location of the config file",
-        default="config/apcmqtt.yaml",
+        default="/etc/apcmqtt/apcmqtt.yaml",
     )
 
     args = vars(parser.parse_args())
