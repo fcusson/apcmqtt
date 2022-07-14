@@ -88,12 +88,19 @@ class Ups:
 
         try:
             self.update()
-        except (ApcAccessConnectionError, DependencyError):
+        except ApcAccessConnectionError:
             url = f"{self.host}:{self.port}" if self.is_local else "localhost"
             utils.log_message(
                 LOGGER,
                 f"Unable to connect to apcaccess @{url}",
                 logging.WARNING,
+            )
+        except DependencyError:
+            utils.log_message(
+                LOGGER,
+                ("apcupsd could not be found, please make sure it is"
+                 "installed correctly on your system."),
+                logging.ERROR
             )
 
     def __str__(self) -> str:
@@ -155,8 +162,8 @@ class Ups:
 
         try:
 
-            query = "/usr/sbin/apcaccess" if self.is_local else \
-                ["/usr/sbin/apcaccess", "-h", f"{self.host}:{self.port}"]
+            query = "apcaccess" if self.is_local else \
+                ["apcaccess", "-h", f"{self.host}:{self.port}"]
 
             status = subprocess.check_output(query).decode("ascii")
 
