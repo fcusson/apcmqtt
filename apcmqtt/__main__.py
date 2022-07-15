@@ -251,17 +251,19 @@ if __name__ == "__main__":
     else:
         logging.basicConfig(level=logging.INFO)
 
+    config_location = args["config"]
+
     try:
         utils.log_message(
             LOGGER,
             "starting setup",
             logging.DEBUG,
         )
-        UPS_DICT, PUBLISHER, DELAY = setup(args["config"])
+        UPS_DICT, PUBLISHER, DELAY = setup(config_location)
     except MissingConfigError:
         utils.log_message(
             LOGGER,
-            "Configuration file could not be found",
+            f"Configuration file could not be found at {config_location}",
             logging.ERROR
         )
     except ConfigurationError as configExc:

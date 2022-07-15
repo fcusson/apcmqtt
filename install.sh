@@ -1,18 +1,26 @@
 #!/bin/bash
 
 function _main() {
+
+    SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+    CONFIG_LOCATION="/etc/apcmqtt"
+    LIB_LOCATION="/lib/apcmqtt"
+
     # check for dependencies
     install_dependencies
 
-    # build module
-    #TODO
-
-    # create start file
-    #TODO
-
     # copy service file
-    #TODO
-    :
+    cp "$SCRIPT_DIR/config/apcmqtt.service" "/etc/systemd/system/"
+    chmod +x "/etc/systemd/system/apcmqtt.service"
+
+    # copy module to /lib
+    mkdir -p "$LIB_LOCATION"
+    cp -r "$SCRIPT_DIR/apcmqtt" "$LIB_LOCATION/"
+
+    # copy config to /etc
+    mkdir -p "$CONFIG_LOCATION"
+    cp "$SCRIPT_DIR/config/apcmqtt.yaml.exemple" "$CONFIG_LOCATION/apcmqtt.yaml"
+
 }
 
 function install_dependencies() {
@@ -36,3 +44,10 @@ function install_dependencies() {
     pip install paho-mqtt
 
 }
+
+if [ "$EUID" -ne 0 ]; then
+    echo "Must be run as root"
+    exit
+fi
+
+_main

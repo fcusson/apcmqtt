@@ -5,7 +5,7 @@ After=network.target
 [Service]
 WorkingDirectory=/lib/apcmqtt/
 ExecStart=python -m apcmqtt
-ExecStop=
+KillSignal=SIGINT
 
 [Install]
 WantedBy=multi-user.target
