@@ -26,19 +26,24 @@ function _main() {
 function install_dependencies() {
 
     if [ -x "$(command -v apt)" ]; then
-        apt install -y apcupsd
+        apt install -y apcupsd python3 python3-pip
     elif [ -x "$(command -v dnf)" ]; then
-        dnf install -y apcupsd
+        dnf install -y apcupsd python3 python3-pip
     elif [ -x "$(command -v zypper)" ]; then
         zypper addrepo https://download.opensuse.org/repositories/openSUSE:Factory/standard/openSUSE:Factory.repo
         zypper refresh
-        zypper -n install apcupsd
+        zypper -n install apcupsd python3 python3-pip
     elif [ -x "$(command -v pacman)" ]; then
-        yes | pacman -S apcupsd
+        yes | pacman -S apcupsd python python-pip
     elif [ -x "$(command -v emerge)" ]; then
-        emerge sync && emerge -y apcupsd
+        emerge sync
+        emerge -y dev-lang/python:3.10
+        emerge -y dev-python/pip
+        emerge -y apcupsd
     elif [ -x "$(command -v apk)" ]; then
         apk add apcupsd
+        apk add python3
+        python -m ensurepip
     fi
 
     pip install paho-mqtt
