@@ -125,7 +125,7 @@ class Ups:
         """fetches the status of the ups to update the instance"""
         self.datapack = self.get_ups_status()
 
-        self.name = self.datapack.pop("upsname")
+        self.datapack.pop("upsname")
         self.status = self.datapack.pop("status")
         self.time_left = self.datapack.pop("timeleft")
         self.battery_charge = self.datapack.pop("bcharge")
