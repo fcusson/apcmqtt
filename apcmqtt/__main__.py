@@ -67,7 +67,7 @@ def setup(config_file: str) -> tuple[dict[str, Ups], Publisher, int]:
 
     utils.log_message(
         LOGGER,
-        "Config file loaded",
+        f"Config file loaded, from {config_file}",
         logging.INFO,
     )
 
