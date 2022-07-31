@@ -1,0 +1,8 @@
+version: "3.9"
+
+services:
+  apcmqtt:
+    container_name: apcmqtt
+    build: .
+    volumes:
+      - ./config:/config:z
