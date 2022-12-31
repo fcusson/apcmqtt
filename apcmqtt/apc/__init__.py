@@ -3,7 +3,7 @@
 Classes:
     Ups
 """
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 import subprocess
 import apcmqtt.utils as utils
@@ -44,7 +44,7 @@ class Ups:
 
     name: str
     status: str
-    time_left: float
+    time_left: timedelta
     battery_charge: float
     datapack: dict[str, str]
     is_local: bool
@@ -127,8 +127,13 @@ class Ups:
 
         self.datapack.pop("upsname")
         self.status = self.datapack.pop("status")
-        self.time_left = self.datapack.pop("timeleft")
+        time_left_str = self.datapack.pop("timeleft")
         self.battery_charge = self.datapack.pop("bcharge")
+
+        self.time_left = timedelta(
+            minutes=int(time_left_str.split('.')[0])//1,
+            seconds=int(time_left_str.split('.')[1])*60//10
+        )
 
     def get_dict(self) -> dict[str, str]:
         """get a dictionary containing all the keys and values to
