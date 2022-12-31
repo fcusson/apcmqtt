@@ -151,7 +151,9 @@ class Ups:
 
         result.update(self.datapack)
 
-        result["keys"] = str(list(result.keys()))
+        keys = str(list(result.keys()))
+
+        result["keys"] = (keys[:252] + "...") if len(keys) > 255 else keys
 
         return result
 
