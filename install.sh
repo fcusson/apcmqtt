@@ -10,16 +10,24 @@ function _main() {
     install_dependencies
 
     # copy service file
-    cp "$SCRIPT_DIR/config/apcmqtt.service" "/etc/systemd/system/"
-    chmod +x "/etc/systemd/system/apcmqtt.service"
+    if [ ! -f "/etc/systemd/system/apcmqtt.service" ]; then
+        cp "$SCRIPT_DIR/config/apcmqtt.service" "/etc/systemd/system/"
+        chmod +x "/etc/systemd/system/apcmqtt.service"
+    else
+        echo "service file already exist, skip step"
+    fi
 
     # copy module to /lib
     mkdir -p "$LIB_LOCATION"
     cp -r "$SCRIPT_DIR/apcmqtt" "$LIB_LOCATION/"
 
     # copy config to /etc
-    mkdir -p "$CONFIG_LOCATION"
-    cp "$SCRIPT_DIR/config/apcmqtt.yaml.exemple" "$CONFIG_LOCATION/apcmqtt.yaml"
+    if [ ! -f "$CONFIG_LOCATION/apcmqtt.yaml" ]; then
+        mkdir -p "$CONFIG_LOCATION"
+        cp "$SCRIPT_DIR/config/apcmqtt.yaml.exemple" "$CONFIG_LOCATION/apcmqtt.yaml"
+    else
+        echo "config file already exist, skip step"
+    fi
 
 }
 
